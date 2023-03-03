@@ -25,7 +25,7 @@ func Example_Opinion() {
 	// Output:
 	// ...
 
-	task1, err := client.Opinion.
+	opinion1, err := client.Opinion.
 		Create().
 		SetAsunto("Golang es mejor que Python").
 		SetContenido("Por economía, rendimiento, y comunidad").
@@ -33,9 +33,22 @@ func Example_Opinion() {
 	if err != nil {
 		log.Fatalf("Error al crear una opinion: %v", err)
 	}
-	fmt.Printf("%d: %q %q\n", task1.ID, task1.Asunto, task1.Contenido)
+	fmt.Printf("%d: %q %q\n", opinion1.ID, opinion1.Asunto, opinion1.Contenido)
 
+	opinion2, err := client.Opinion.
+		Create().
+		SetAsunto("Bayer Munich es mejor que PSG").
+		SetContenido("Será que se confirma en la champions !!??").
+		Save(ctx)
+	if err != nil {
+		log.Fatalf("Error al crear una opinion: %v", err)
+	}
+	if err := opinion2.Update().SetParent(opinion1).Exec(ctx); err != nil {
+		log.Fatalf("error vinculando opinion2 a su registro padre: %v", err)
+	}
+	fmt.Printf("%d: %q %q\n", opinion2.ID, opinion2.Asunto, opinion2.Contenido)
 	// Output:
 	// 1: "Golang es mejor que Python" "Por economía, rendimiento, y comunidad"
+	// 2: "Bayer Munich es mejor que PSG" "Será que se confirma en la champions !!??"
 
 }
