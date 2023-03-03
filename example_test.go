@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"opinion/ent"
+	"opinion/ent/opinion"
 
 	"entgo.io/ent/dialect"
 	_ "github.com/mattn/go-sqlite3"
@@ -58,9 +59,49 @@ func Example_Opinion() {
 	for _, t := range items {
 		fmt.Printf("%d: %q\n", t.ID, t.Asunto)
 	}
+
+	// Query all opinion items that depend on other items.
+	items, err = client.Opinion.Query().Where(opinion.HasParent()).All(ctx)
+	if err != nil {
+		log.Fatalf("error al consultar opiniones: %v", err)
+	}
+	for _, t := range items {
+		fmt.Printf("caso query items con dependencia %d: %q\n", t.ID, t.Asunto)
+	}
+
+	// Query all opiniones items that don't depend on other items and have items that depend them.
+	items, err = client.Opinion.Query().
+		Where(
+			opinion.Not(
+				opinion.HasParent(),
+			),
+			opinion.HasChildren(),
+		).
+		All(ctx)
+	if err != nil {
+		log.Fatalf("failed querying opiniones: %v", err)
+	}
+	for _, t := range items {
+		fmt.Printf("%d: %q\n", t.ID, t.Contenido)
+	}
+
+	// Get a parent item through its children and expect the
+	// query to return exactly one item.
+	parent, err := client.Opinion.Query(). // Query all opiniones.
+						Where(opinion.HasParent()). // Filter only those with parents.
+						QueryParent().              // Continue traversals to the parents.
+						Only(ctx)                   // Expect exactly one item.
+	if err != nil {
+		log.Fatalf("failed querying opiniones: %v", err)
+	}
+	fmt.Printf("%d: %q\n", parent.ID, parent.Asunto)
+
 	// Output:
 	// 1: "Golang es mejor que Python" "Por economía, rendimiento, y comunidad"
 	// 2: "Bayer Munich es mejor que PSG" "Será que se confirma en la champions !!??"
 	// 1: "Golang es mejor que Python"
 	// 2: "Bayer Munich es mejor que PSG"
+	// caso query items con dependencia 2: "Bayer Munich es mejor que PSG"
+	// 1: "Por economía, rendimiento, y comunidad"
+	// 1: "Golang es mejor que Python"
 }
