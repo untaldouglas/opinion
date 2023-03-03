@@ -34,6 +34,8 @@ func Example_Opinion() {
 		log.Fatalf("Error al crear una opinion: %v", err)
 	}
 	fmt.Printf("%d: %q %q\n", opinion1.ID, opinion1.Asunto, opinion1.Contenido)
+	// Output:
+	// 1: "Golang es mejor que Python" "Por economía, rendimiento, y comunidad"
 
 	opinion2, err := client.Opinion.
 		Create().
@@ -47,8 +49,18 @@ func Example_Opinion() {
 		log.Fatalf("error vinculando opinion2 a su registro padre: %v", err)
 	}
 	fmt.Printf("%d: %q %q\n", opinion2.ID, opinion2.Asunto, opinion2.Contenido)
+
+	// Query todas las opiniones.
+	items, err := client.Opinion.Query().All(ctx)
+	if err != nil {
+		log.Fatalf("error al consultar todos las opiniones: %v", err)
+	}
+	for _, t := range items {
+		fmt.Printf("%d: %q\n", t.ID, t.Asunto)
+	}
 	// Output:
 	// 1: "Golang es mejor que Python" "Por economía, rendimiento, y comunidad"
 	// 2: "Bayer Munich es mejor que PSG" "Será que se confirma en la champions !!??"
-
+	// 1: "Golang es mejor que Python"
+	// 2: "Bayer Munich es mejor que PSG"
 }
